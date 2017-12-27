@@ -37,8 +37,10 @@ HTML 소스<br>
 <script src="js/web3.min.js"></script>
 <!-- script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"></script -->
 <script>
+
+var walletAddress = '0xe9cea74ca58839ff18019511ace0f6cac0e5878f';
 var contractAddress = '0x852a29040504D4d41aCC83bFe1d6a1861BB46797';
-var abi = [{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"set","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"}];
+var abi = [ { "constant": true, "inputs": [ { "name": "fileHash", "type": "string" } ], "name": "get", "outputs": [ { "name": "timestamp", "type": "uint256", "value": "0" }, { "name": "owner", "type": "string", "value": "" } ], "payable": false, "stateMutability": "view", "type": "function" }, { "constant": false, "inputs": [ { "name": "owner", "type": "string" }, { "name": "fileHash", "type": "string" } ], "name": "set", "outputs": [], "payable": false, "stateMutability": "nonpayable", "type": "function" }, { "anonymous": false, "inputs": [ { "indexed": false, "name": "status", "type": "bool" }, { "indexed": false, "name": "timestamp", "type": "uint256" }, { "indexed": false, "name": "owner", "type": "string" }, { "indexed": false, "name": "fileHash", "type": "string" } ], "name": "logFileAddedStatus", "type": "event" } ];
 var simpleStorageContract;
 var simpleStorage;
 
@@ -50,9 +52,18 @@ window.addEventListener('load', function() {
     window.web3 = new Web3(web3.currentProvider);
   } else {
     console.log('No web3? You should consider trying MetaMask!')
-    // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-    window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+    window.web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"));
   }
+  window.web3.eth.getCoinbase().then(function (coinbase) {
+    window.web3.eth.getBalance(walletAddress).then(function(balance){
+      // 내 지갑에 들어있는 액수
+      console.log(balance);
+    });
+  })
+  .catch(function (error) {
+      console.log(error.message);
+  });
+
   // Now you can start your app & access web3 freely:
   startApp();
 });
@@ -65,43 +76,41 @@ function startApp() {
     document.getElementById('accountAddr').innerHTML = getLink(r[0]);
   });
 
-  getValue();
+  getValue('lee');
+  const random = Math.floor(Math.random()*1000);
+console.log(web3.utils.utf8ToHex(`${random}`));
+  setValue(`k${random}ey`,`v${random}alue`);
+  getValue('k825ey');
 }
 
 function getLink(addr) {
   return '<a target="_blank" href=https://testnet.etherscan.io/address/' + addr + '>' + addr +'</a>';
 }
 
-function getValue() {
-  simpleStorage.get(function(e,r){
-    document.getElementById('storedData').innerHTML=r.toNumber();
+function getValue(key) {
+  var contract = new web3.eth.Contract(abi, contractAddress);
+  contract.methods.get(key).call().then(function(result){
+    console.log(result);
+  })
+  .catch(function (error) {
+      console.log(error);
+  });
 
-  });
-  web3.eth.getBlockNumber(function(e,r){
-    document.getElementById('lastBlock').innerHTML = r;
-  });
 }
 
-function setValue() {
+function setValue(key,value) {
+    console.log(key,value);
+  var contract = new web3.eth.Contract(abi, contractAddress);
+  contract.methods.set(key,value).send({from:walletAddress
+  })
+  .on('receipt', function(receipt){
+    console.log(`receipt : ${receipt}`);
+  })
+  .on('confirmation', function(confirmationNumber, receipt){
 
-  var newValue = document.getElementById('newValue').value;
-  var txid
-  simpleStorage.set(newValue, function(e,r){
-    document.getElementById('result').innerHTML = 'Transaction id: ' + r + '<span id="pending" style="color:red;">(Pending)</span>';
-    txid = r;
-  });
-  var filter = web3.eth.filter('latest');
-  filter.watch(function(e, r) {
-    getValue();
-    web3.eth.getTransaction(txid, function(e,r){
-      if (r != null && r.blockNumber > 0) {
-        document.getElementById('pending').innerHTML = '(기록된 블록: ' + r.blockNumber + ')';
-        document.getElementById('pending').style.cssText ='color:green;';
-        document.getElementById('storedData').style.cssText ='color:green; font-size:300%;';
-        filter.stopWatching();
-      }
-   });
- });
+  })
+  .on('error', console.error);
+    
 }
 
 </script>
