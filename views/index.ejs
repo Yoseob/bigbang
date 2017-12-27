@@ -34,10 +34,10 @@ HTML 소스<br>
 </p>
 
 </body>
-<script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.js"></script>
+<script src="js/web3.min.js"></script>
 <!-- script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"></script -->
 <script>
-var contractAddress = '0xDd3dDf5816665880b5DfDFcaE959540dAc71215d';
+var contractAddress = '0x852a29040504D4d41aCC83bFe1d6a1861BB46797';
 var abi = [{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"set","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"}];
 var simpleStorageContract;
 var simpleStorage;
@@ -58,8 +58,8 @@ window.addEventListener('load', function() {
 });
 
 function startApp() {
-  simpleStorageContract = web3.eth.contract(abi);
-  simpleStorage = simpleStorageContract.at(contractAddress);
+  simpleStorageContract = new web3.eth.Contract(abi);
+  simpleStorage = web3.eth.getStorageAt(contractAddress);
   document.getElementById('contractAddr').innerHTML = getLink(contractAddress);
   web3.eth.getAccounts(function(e,r){
     document.getElementById('accountAddr').innerHTML = getLink(r[0]);
