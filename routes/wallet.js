@@ -69,7 +69,8 @@ function generate_addresses(seed, pw , cb) {
                     cb({
                             "address" : address ,
                             "privateKey" : private_key,
-                            "balance" : balance
+                            "balance" : balance,
+                            "keyStore": ks
                     });
                 }
             }
